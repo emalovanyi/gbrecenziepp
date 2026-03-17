@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GymBeam App – Recenzie (Prototype)</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #F26722;
+    --orange-dark: #d95a1a;
+    --orange-light: #fff3ec;
+    --black: #111;
+    --gray-50: #f9f9f9;
+    --gray-100: #f2f2f2;
+    --gray-200: #e5e5e5;
+    --gray-300: #ccc;
+    --gray-400: #aaa;
+    --gray-600: #666;
+    --gray-700: #444;
+    --green: #2ca65a;
+    --red: #d63b3b;
+    --blue: #1a6fc4;
+    --white: #fff;
+    --radius-sm: 10px;
+    --radius: 16px;
+    --radius-lg: 22px;
+    --shadow-sheet: 0 -4px 32px rgba(0,0,0,0.14);
+    --font: 'Nunito', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--font);
+    background: #e8e6e2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 12px 40px;
+    min-height: 100vh;
+  }
+
+  /* ─── SCENARIO SWITCHER ─── */
+  .scenario-bar {
+    width: 100%;
+    max-width: 430px;
+    background: #1a1a1a;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .scenario-bar .label { color: #888; font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; width: 100%; }
+  .sc-btn {
+    background: #2a2a2a;
+    border: 1.5px solid #3a3a3a;
+    color: #aaa;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all .18s;
+    white-space: nowrap;
+  }
+  .sc-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .sc-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+
+  /* ─── PHONE FRAME ─── */
+  .phone {
+    width: 100%;
+    max-width: 393px;
+    background: var(--white);
+    border-radius: 40px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+    min-height: 812px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── STATUS BAR ─── */
+  .status-bar {
+    background: var(--white);
+    padding: 12px 20px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .status-time { font-size: 15px; font-weight: 800; color: var(--black); }
+  .status-icons { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--black); }
+
+  /* ─── NAV BAR (top) ─── */
+  .nav-bar {
+    background: var(--white);
+    padding: 6px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .nav-back { font-size: 22px; color: var(--black); cursor: pointer; padding: 4px; background: none; border: none; font-family: var(--font); line-height: 1; }
+  .nav-title { font-size: 18px; font-weight: 800; color: var(--black); }
+  .nav-filter { font-size: 22px; color: var(--black); cursor: pointer; }
+
+  /* ─── SCREEN CONTENT ─── */
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--white);
+    -webkit-overflow-scrolling: touch;
+    display: none;
+  }
+  .screen.active { display: block; }
+
+  /* ─── REVIEWS SCREEN ─── */
+  .reviews-summary {
+    padding: 20px 16px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .big-score {
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--orange);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 70px;
+    text-align: center;
+  }
+  .big-score-stars { color: var(--orange); font-size: 18px; line-height: 1; margin-top: 4px; }
+  .big-score-count { font-size: 12px; color: var(--gray-400); font-weight: 600; margin-top: 3px; }
+  .rating-bars { flex: 1; }
+  .rating-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .rb-label { font-size: 11px; color: var(--gray-600); font-weight: 700; width: 26px; text-align: right; flex-shrink: 0; }
+  .rb-track { flex: 1; height: 5px; background: var(--gray-100); border-radius: 3px; overflow: hidden; }
+  .rb-fill { height: 100%; background: var(--orange); border-radius: 3px; }
+  .rb-count { font-size: 11px; color: var(--gray-400); width: 20px; text-align: right; flex-shrink: 0; }
+
+  /* Star filter chips */
+  .star-filter-row {
+    padding: 0 16px 16px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -ms-overflow-style: none; scrollbar-width: none;
+  }
+  .star-filter-row::-webkit-scrollbar { display: none; }
+  .star-chip {
+    flex-shrink: 0;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-700);
+    background: var(--white);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all .15s;
+  }
+  .star-chip.active { background: var(--black); border-color: var(--black); color: var(--white); }
+
+  /* Review card */
+  .review-card {
+    margin: 0 16px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .rv-top {
+    padding: 12px 14px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .rv-stars-row { display: flex; align-items: center; gap: 5px; }
+  .rv-stars { color: var(--orange); font-size: 14px; }
+  .rv-score { font-size: 13px; font-weight: 700; color: var(--black); }
+  .rv-date { font-size: 12px; color: var(--gray-400); }
+  .rv-meta { padding: 0 14px 8px; font-size: 12px; color: var(--gray-600); display: flex; align-items: center; gap: 5px; }
+  .rv-meta svg { width: 14px; height: 14px; color: var(--green); flex-shrink: 0; }
+  .rv-divider { height: 1px; background: var(--gray-100); margin: 0 14px; }
+  .rv-body { padding: 10px 14px 12px; }
+  .rv-title { font-size: 14px; font-weight: 800; color: var(--black); margin-bottom: 5px; }
+  .rv-text { font-size: 13px; color: var(--gray-600); line-height: 1.55; }
+  .rv-text .more { color: var(--orange); font-weight: 700; }
+  .rv-recommend {
+    padding: 8px 14px;
+    background: var(--gray-50);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+    text-align: center;
+  }
+
+  /* FAB */
+  .fab {
+    position: sticky;
+    bottom: 80px;
+    right: 16px;
+    float: right;
+    margin: -48px 16px 0 0;
+    background: var(--orange);
+    color: var(--white);
+    border: none;
+    border-radius: 30px;
+    padding: 14px 22px;
+    font-size: 16px;
+    font-weight: 800;
+    font-family: var(--font);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(242,103,34,.45);
+    z-index: 10;
+    transition: background .2s, transform .1s;
+  }
+  .fab:active { transform: scale(.96); }
+
+  /* ─── BOTTOM NAV ─── */
+  .bottom-nav {
+    background: var(--white);
+    border-top: 1px solid var(--gray-100);
+    padding: 10px 0 20px;
+    display: flex;
+    justify-content: space-around;
+    flex-shrink: 0;
+  }
+  .bn-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 0 10px; }
+  .bn-icon { font-size: 22px; color: var(--gray-400); }
+  .bn-icon.active-icon { color: var(--orange); }
+  .bn-logo { width: 34px; height: 34px; background: var(--orange); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; }
+
+  /* ─── BOTTOM SHEET ─── */
+  .sheet-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    border-radius: 40px;
+    align-items: flex-end;
+  }
+  .sheet-overlay.active { display: flex; }
+
+  .sheet {
+    width: 100%;
+    background: var(--white);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: var(--shadow-sheet);
+    animation: sheetUp .28s cubic-bezier(.32,1.25,.6,1);
+    -webkit-overflow-scrolling: touch;
+  }
+  @keyframes sheetUp {
+    from { transform: translateY(100%); opacity: .6; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--gray-200);
+    border-radius: 2px;
+    margin: 10px auto 0;
+  }
+
+  .sheet-header {
+    padding: 16px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sheet-title { font-size: 18px; font-weight: 800; }
+  .sheet-close {
+    width: 30px; height: 30px;
+    background: var(--gray-100);
+    border: none; border-radius: 50%;
+    font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font);
+    transition: background .15s;
+  }
+  .sheet-close:hover { background: var(--gray-200); }
+
+  .sheet-body { padding: 16px 20px 32px; }
+
+  /* ─── STAR PICKER ─── */
+  .star-question { text-align: center; font-size: 15px; color: var(--gray-600); margin-bottom: 24px; font-weight: 600; }
+  .star-picker-app {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .sp-star {
+    font-size: 44px;
+    color: var(--gray-200);
+    cursor: pointer;
+    transition: color .12s, transform .1s;
+    user-select: none;
+    line-height: 1;
+  }
+  .sp-star.filled { color: var(--orange); }
+  .sp-star.hover { transform: scale(1.2); }
+  .star-label-app {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--orange);
+    min-height: 24px;
+    margin-bottom: 28px;
+  }
+
+  /* ─── FORM ELEMENTS ─── */
+  .product-row-app {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 18px;
+  }
+  .prod-thumb {
+    width: 56px; height: 56px;
+    background: var(--gray-100);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .prod-info strong { font-size: 14px; font-weight: 800; display: block; margin-bottom: 4px; }
+  .prod-stars-row { display: flex; align-items: center; gap: 4px; }
+  .ps { font-size: 20px; color: var(--gray-200); }
+  .ps.filled { color: var(--orange); }
+  .edit-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 16px; color: var(--gray-400); padding: 2px 5px;
+    border-radius: 6px; transition: color .15s; font-family: var(--font);
+  }
+  .edit-btn:hover { color: var(--orange); }
+
+  .field-label { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 7px; display: block; }
+  .field-label .req { color: var(--orange); }
+  .app-input, .app-textarea {
+    width: 100%;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    font-size: 14px;
+    font-family: var(--font);
+    outline: none;
+    color: var(--black);
+    transition: border-color .18s;
+    background: var(--white);
+  }
+  .app-input:focus, .app-textarea:focus { border-color: var(--orange); }
+  .app-input::placeholder, .app-textarea::placeholder { color: #c0c0c0; }
+  .app-textarea { resize: none; min-height: 90px; }
+
+  .chips-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0 14px; }
+  .app-chip {
+    border: 1.5px solid var(--gray-200);
+    border-radius: 20px;
+    padding: 5px 13px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-700);
+    background: var(--white);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all .15s;
+  }
+  .app-chip:hover, .app-chip.selected { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+
+  .field-group { margin-bottom: 16px; }
+
+  .checkbox-app {
+    display: flex; align-items: center; gap: 9px;
+    margin-top: 9px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--gray-700);
+  }
+  .checkbox-app input { width: 17px; height: 17px; accent-color: var(--orange); }
+
+  .recaptcha-app { font-size: 11px; color: var(--gray-400); margin-bottom: 16px; line-height: 1.5; }
+  .recaptcha-app a { color: var(--blue); }
+
+  .points-badge-app {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--orange-light);
+    color: var(--orange);
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-size: 12px; font-weight: 800;
+    margin-left: 8px;
+  }
+
+  .btn-app {
+    width: 100%;
+    background: var(--orange);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 800;
+    font-family: var(--font);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px;
+    transition: background .18s, transform .1s;
+  }
+  .btn-app:active { transform: scale(.98); }
+  .btn-app:hover { background: var(--orange-dark); }
+  .btn-app.outline {
+    background: transparent; color: var(--black);
+    border: 2px solid var(--gray-200);
+    margin-top: 10px;
+  }
+  .btn-app.outline:hover { border-color: var(--orange); color: var(--orange); background: transparent; }
+  .btn-app.dark { background: var(--black); }
+  .btn-app.dark:hover { background: #333; }
+
+  /* ─── ALERTS ─── */
+  .alert-app {
+    border-radius: var(--radius-sm);
+    padding: 12px 13px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex; gap: 9px; align-items: flex-start;
+    line-height: 1.5;
+  }
+  .alert-warn-app { background: #fff7ed; border: 1.5px solid #ffd4a8; color: #7a3a00; }
+  .alert-error-app { background: #fff0f0; border: 1.5px solid #ffc5c5; color: #7a0000; }
+  .alert-icon-app { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+
+  /* ─── SUCCESS SHEET ─── */
+  .success-sheet-body {
+    text-align: center;
+    padding: 24px 20px 32px;
+  }
+  .jim { font-size: 72px; margin-bottom: 14px; animation: jimbounce .7s ease infinite alternate; display: block; }
+  @keyframes jimbounce {
+    from { transform: translateY(0) rotate(-3deg); }
+    to   { transform: translateY(-10px) rotate(3deg); }
+  }
+  .success-sheet-body h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+  .success-sheet-body p { font-size: 14px; color: var(--gray-600); line-height: 1.6; }
+
+  /* ─── LOGIN SHEET ─── */
+  .login-prompt-icon { font-size: 52px; text-align: center; display: block; margin-bottom: 14px; }
+  .login-prompt-text { text-align: center; font-size: 15px; color: var(--gray-600); line-height: 1.6; margin-bottom: 22px; font-weight: 600; }
+  .divider-or {
+    text-align: center; font-size: 12px; font-weight: 700;
+    color: var(--gray-400); margin: 14px 0; position: relative;
+  }
+  .divider-or::before {
+    content: ''; position: absolute; top: 50%; left: 0; right: 0;
+    height: 1px; background: var(--gray-200); z-index: 0;
+  }
+  .divider-or span { background: #fff; padding: 0 12px; position: relative; z-index: 1; }
+
+  /* ─── EDIT EXISTING ─── */
+  .existing-card-app {
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px;
+    border: 1.5px solid var(--gray-200);
+  }
+  .existing-card-app .prod-thumb { width: 58px; height: 58px; font-size: 28px; }
+
+  .info-box {
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--gray-600);
+    margin-bottom: 20px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── SCENARIO SWITCHER ─── -->
+<div class="scenario-bar">
+  <div class="label">Scenár</div>
+  <button class="sc-btn active" onclick="setScenario('reviews')">📋 Reviews</button>
+  <button class="sc-btn" onclick="setScenario('logged-out')">🔒 Neprihlásený</button>
+  <button class="sc-btn" onclick="setScenario('stars')">⭐ Hviezdičky</button>
+  <button class="sc-btn" onclick="setScenario('form')">📝 Formulár</button>
+  <button class="sc-btn" onclick="setScenario('rejected')">⚠️ Zamietnutá</button>
+  <button class="sc-btn" onclick="setScenario('success')">✅ Úspech</button>
+  <button class="sc-btn" onclick="setScenario('edit')">✏️ Editácia</button>
+</div>
+
+<!-- ─── PHONE FRAME ─── -->
+<div class="phone" id="phone">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">08:50</span>
+    <div class="status-icons">
+      <span>▪▪▪</span>
+      <span>📶</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <!-- Nav Bar -->
+  <div class="nav-bar">
+    <button class="nav-back">‹</button>
+    <span class="nav-title" id="nav-title">Recenzie</span>
+    <span class="nav-filter">⚙</span>
+  </div>
+
+  <!-- ── SCREEN: Reviews list ── -->
+  <div class="screen active" id="screen-reviews">
+    <div class="reviews-summary">
+      <div>
+        <div class="big-score">4.6</div>
+        <div class="big-score-stars">★★★★☆</div>
+        <div class="big-score-count">97 recenzií</div>
+      </div>
+      <div class="rating-bars">
+        <div class="rating-bar-row"><span class="rb-label">5.0</span><div class="rb-track"><div class="rb-fill" style="width:79%"></div></div><span class="rb-count">(77)</span></div>
+        <div class="rating-bar-row"><span class="rb-label">4.0</span><div class="rb-track"><div class="rb-fill" style="width:10%"></div></div><span class="rb-count">(10)</span></div>
+        <div class="rating-bar-row"><span class="rb-label">3.0</span><div class="rb-track"><div class="rb-fill" style="width:4%"></div></div><span class="rb-count">(4)</span></div>
+        <div class="rating-bar-row"><span class="rb-label">2.0</span><div class="rb-track"><div class="rb-fill" style="width:1%"></div></div><span class="rb-count">(1)</span></div>
+        <div class="rating-bar-row"><span class="rb-label">1.0</span><div class="rb-track"><div class="rb-fill" style="width:5%"></div></div><span class="rb-count">(5)</span></div>
+      </div>
+    </div>
+
+    <div class="star-filter-row">
+      <div class="star-chip active">Všetky</div>
+      <div class="star-chip">1 ★</div>
+      <div class="star-chip">2 ★</div>
+      <div class="star-chip">3 ★</div>
+      <div class="star-chip">4 ★</div>
+      <div class="star-chip">5 ★</div>
+    </div>
+
+    <div class="review-card">
+      <div class="rv-top">
+        <div class="rv-stars-row"><span class="rv-stars">★★★★★</span><span class="rv-score">5.0</span></div>
+        <span class="rv-date">03.02.2026</span>
+      </div>
+      <div class="rv-meta">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2,8 6,12 14,4"/></svg>
+        Overený nákup · Анна
+      </div>
+      <div class="rv-divider"></div>
+      <div class="rv-body">
+        <div class="rv-title">Najlepšia alternatíva k sójovej omáčke!</div>
+        <div class="rv-text">Organická kokosová aminokyselinová omáčka GymBeam je skvelou a zdravou alternatívou k bežnej sójovej omáčke pre každého, kto ch… <span class="more">...Zobraziť viac</span></div>
+      </div>
+      <div class="rv-recommend">Odporúča</div>
+    </div>
+
+    <div class="review-card">
+      <div class="rv-top">
+        <div class="rv-stars-row"><span class="rv-stars">★★★★★</span><span class="rv-score">5.0</span></div>
+        <span class="rv-date">31.10.2025</span>
+      </div>
+      <div class="rv-meta">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2,8 6,12 14,4"/></svg>
+        Overený nákup · Тетяна
+      </div>
+      <div class="rv-divider"></div>
+      <div class="rv-body">
+        <div class="rv-title">Veľmi chutné</div>
+        <div class="rv-text">Veľmi chutná sushi omáčka. Odporúčam!!!! Nekupujem ju prvýkrát!!!</div>
+      </div>
+      <div class="rv-recommend">Odporúča</div>
+    </div>
+
+    <div style="height:70px;"></div>
+
+    <button class="fab" onclick="openReview()">
+      <span style="font-size:20px;line-height:1;">+</span> Pridať recenziu
+    </button>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="bn-item"><div class="bn-logo">GB</div></div>
+    <div class="bn-item"><span class="bn-icon">🔍</span></div>
+    <div class="bn-item"><span class="bn-icon active-icon">🛒</span></div>
+    <div class="bn-item"><span class="bn-icon">♡</span></div>
+    <div class="bn-item"><span class="bn-icon">👤</span></div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SHEET: LOGGED OUT
+  ════════════════════════════════ -->
+  <div class="sheet-overlay" id="sheet-logged-out">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title">Pridať recenziu</span>
+        <button class="sheet-close" onclick="closeAllSheets()">✕</button>
+      </div>
+      <div class="sheet-body">
+
+        <!-- State A: need login -->
+        <div id="lo-a">
+          <span class="login-prompt-icon">🔐</span>
+          <p class="login-prompt-text">Pre pridanie recenzie je potrebné <strong>prihlásenie</strong> do vášho účtu.</p>
+          <button class="btn-app" onclick="showState('lo-b')">Prihlásiť sa</button>
+          <button class="btn-app outline" onclick="showState('lo-c')">Nemám účet – registrácia</button>
+        </div>
+
+        <!-- State B: login form -->
+        <div id="lo-b" style="display:none;">
+          <p style="text-align:center;font-size:13px;color:var(--gray-400);font-weight:600;margin-bottom:16px;">Prihláste sa pre pridanie recenzie</p>
+          <div class="field-group">
+            <label class="field-label">E-mail</label>
+            <input class="app-input" type="email" placeholder="vas@email.sk">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Heslo</label>
+            <input class="app-input" type="password" placeholder="••••••••">
+          </div>
+          <button class="btn-app dark" onclick="closeAllSheets();alert('Demo: prihlásenie úspešné – otvorí sa flow pre prihláseného zákazníka.')">Prihlásiť sa</button>
+          <div class="divider-or"><span>alebo</span></div>
+          <p style="text-align:center;font-size:13px;color:var(--gray-400);font-weight:600;">Nemáte účet? <a href="#" style="color:var(--orange);font-weight:800;" onclick="showState('lo-c');return false;">Registrácia</a></p>
+        </div>
+
+        <!-- State C: register -->
+        <div id="lo-c" style="display:none;">
+          <span class="login-prompt-icon">✉️</span>
+          <p class="login-prompt-text">Vytvorte si účet a pridávajte recenzie, zbierajte body a sledujte objednávky.</p>
+          <button class="btn-app dark">Vytvoriť účet</button>
+          <button class="btn-app outline" onclick="showState('lo-b')">← Späť na prihlásenie</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SHEET: STAR PICKER
+  ════════════════════════════════ -->
+  <div class="sheet-overlay" id="sheet-stars">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title">Pridať recenziu</span>
+        <button class="sheet-close" onclick="closeAllSheets()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <p class="star-question">Ako hodnotíte produkt?</p>
+        <div class="star-picker-app" id="app-star-picker">
+          <span class="sp-star" data-v="1" onclick="selectAppStar(1)">★</span>
+          <span class="sp-star" data-v="2" onclick="selectAppStar(2)">★</span>
+          <span class="sp-star" data-v="3" onclick="selectAppStar(3)">★</span>
+          <span class="sp-star" data-v="4" onclick="selectAppStar(4)">★</span>
+          <span class="sp-star" data-v="5" onclick="selectAppStar(5)">★</span>
+        </div>
+        <div class="star-label-app" id="app-star-label">— vyberte hodnotenie —</div>
+        <button class="btn-app" id="app-continue-btn" disabled style="opacity:.4;" onclick="openFormSheet()">Pokračovať →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SHEET: FULL FORM
+  ════════════════════════════════ -->
+  <div class="sheet-overlay" id="sheet-form">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title">Pridať recenziu</span>
+        <button class="sheet-close" onclick="closeAllSheets()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <!-- Product row -->
+        <div class="product-row-app">
+          <div class="prod-thumb">🥛</div>
+          <div class="prod-info">
+            <strong>Just Whey – GymBeam</strong>
+            <div class="prod-stars-row" id="form-stars-row">
+              <span class="ps" data-v="1">★</span>
+              <span class="ps" data-v="2">★</span>
+              <span class="ps" data-v="3">★</span>
+              <span class="ps" data-v="4">★</span>
+              <span class="ps" data-v="5">★</span>
+              <button class="edit-btn" onclick="backToStars()" title="Upraviť">✏️</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary + chips -->
+        <div class="field-group">
+          <label class="field-label">Zhrnutie recenzie</label>
+          <input class="app-input" id="app-summary" placeholder="Text" oninput="saveSummary()">
+          <div class="chips-row" id="app-chips"></div>
+        </div>
+
+        <!-- Review text -->
+        <div class="field-group">
+          <label class="field-label">Vaša recenzia:</label>
+          <textarea class="app-textarea" id="app-review" placeholder="Čo vám na produkte vyhovovalo? Ako ho používate? Pre koho je podľa vás vhodný?" oninput="saveReview()"></textarea>
+        </div>
+
+        <!-- Author -->
+        <div class="field-group">
+          <label class="field-label">Meno autora <span class="req">*</span></label>
+          <input class="app-input" id="app-author" value="Pamela G.">
+          <label class="checkbox-app">
+            <input type="checkbox" id="app-initials" onchange="toggleAppInitials()">
+            Zobraziť len iniciály mena
+          </label>
+        </div>
+
+        <p class="recaptcha-app">Táto stránka je chránená reCAPTCHA a platia na ňu <a href="#">zásady ochrany osobných údajov</a> a <a href="#">podmienky používania</a> spoločnosti Google.</p>
+
+        <button class="btn-app" onclick="submitAppReview()">
+          Odoslať recenziu
+          <span class="points-badge-app" id="app-points-badge">+10 bodov</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SHEET: REJECTED
+  ════════════════════════════════ -->
+  <div class="sheet-overlay" id="sheet-rejected">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title">Pridať recenziu</span>
+        <button class="sheet-close" onclick="closeAllSheets()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="alert-app alert-error-app">
+          <span class="alert-icon-app">⚠️</span>
+          <span>Vyzerá to, že recenzia obsahuje cenu alebo kontakt. Skúste to, prosím, bez toho, nech ju môžeme zverejniť.</span>
+        </div>
+        <div class="product-row-app">
+          <div class="prod-thumb">🥛</div>
+          <div class="prod-info">
+            <strong>Just Whey – GymBeam</strong>
+            <div class="prod-stars-row">
+              <span class="ps filled">★</span>
+              <span class="ps filled">★</span>
+              <span class="ps filled">★</span>
+              <span class="ps filled">★</span>
+              <span class="ps">★</span>
+            </div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Zhrnutie recenzie</label>
+          <input class="app-input" value="Odporúčam, má dobrú chuť">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Vaša recenzia:</label>
+          <textarea class="app-textarea">Proteín má dobrú chuť, výborne sa rozpúšťa. Cena okolo 25 € za balenie je primeraná.</textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Meno autora</label>
+          <input class="app-input" value="Pamela G.">
+        </div>
+        <p class="recaptcha-app">Táto stránka je chránená reCAPTCHA a platia na ňu <a href="#">zásady ochrany osobných údajov</a> a <a href="#">podmienky používania</a> spoločnosti Google.</p>
+        <button class="btn-app">Odoslať recenziu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SHEET: SUCCESS
+  ════════════════════════════════ -->
+  <div class="sheet-overlay" id="sheet-success">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header" style="justify-content:flex-end;">
+        <button class="sheet-close" onclick="closeAllSheets()">✕</button>
+      </div>
+      <div class="success-sheet-body">
+        <span class="jim">🫙</span>
+        <h3>Ďakujeme! Recenzia je na ceste.</h3>
+        <p>Zverejníme ju po kontrole, aby bola užitočná pre ostatných.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SHEET: EDIT
+  ════════════════════════════════ -->
+  <div class="sheet-overlay" id="sheet-edit">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-title">Pridať recenziu</span>
+        <button class="sheet-close" onclick="closeAllSheets()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="alert-app alert-warn-app">
+          <span class="alert-icon-app">ℹ️</span>
+          <div><strong>Už ste tento produkt hodnotili.</strong> Chcete svoju recenziu upraviť?</div>
+        </div>
+        <div class="existing-card-app">
+          <div class="prod-thumb">🥛</div>
+          <div>
+            <div style="font-weight:800;font-size:14px;margin-bottom:2px;">Pamela G.</div>
+            <div style="font-size:13px;color:var(--gray-600);margin-bottom:4px;">Just Whey – GymBeam</div>
+            <div style="color:var(--orange);font-size:20px;">★★★★☆</div>
+          </div>
+        </div>
+        <div class="info-box">
+          <span>ℹ️</span>
+          <span>Body za recenziu získate len raz – za prvú recenziu.</span>
+        </div>
+        <button class="btn-app dark" onclick="openEditFlow()">Upraviť recenziu</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+  const starLabels = {1:'Neodporúčam',2:'Skôr nie',3:'Priemer',4:'Spokojnosť',5:'Top'};
+  const chipSets = {
+    5:['Výborný produkt','Kúpim znova','Dobrá kvalita'],
+    4:['Odporúčam','Super, len…','Splnilo očakávania'],
+    3:['OK, ale…','Priemer','Záleží pre koho'],
+    2:['Nesadlo mi','Problém s…','Čakal/a som viac'],
+    1:['Nesadlo mi','Problém s…','Čakal/a som viac'],
+  };
+
+  let curRating = 0;
+  let savedSum = '', savedRev = '';
+
+  function closeAllSheets() {
+    document.querySelectorAll('.sheet-overlay').forEach(s => s.classList.remove('active'));
+  }
+
+  function setScenario(sc) {
+    closeAllSheets();
+    document.querySelectorAll('.sc-btn').forEach(b => b.classList.remove('active'));
+    const map = {'reviews':0,'logged-out':1,'stars':2,'form':3,'rejected':4,'success':5,'edit':6};
+    document.querySelectorAll('.sc-btn')[map[sc]]?.classList.add('active');
+    switch(sc) {
+      case 'reviews': break;
+      case 'logged-out':
+        showState('lo-a');
+        document.getElementById('sheet-logged-out').classList.add('active'); break;
+      case 'stars':
+        curRating=0; renderAppStars(0);
+        document.getElementById('app-star-label').textContent='— vyberte hodnotenie —';
+        const b=document.getElementById('app-continue-btn'); b.disabled=true; b.style.opacity='.4';
+        document.getElementById('sheet-stars').classList.add('active'); break;
+      case 'form':
+        openFormSheet(4); break;
+      case 'rejected':
+        document.getElementById('sheet-rejected').classList.add('active'); break;
+      case 'success':
+        document.getElementById('sheet-success').classList.add('active'); break;
+      case 'edit':
+        document.getElementById('sheet-edit').classList.add('active'); break;
+    }
+  }
+
+  function openReview() { setScenario('logged-out'); }
+
+  function showState(id) {
+    ['lo-a','lo-b','lo-c'].forEach(i => {
+      const el = document.getElementById(i);
+      if(el) el.style.display = i===id ? '' : 'none';
+    });
+  }
+
+  function renderAppStars(val) {
+    document.querySelectorAll('#app-star-picker .sp-star').forEach(s => {
+      s.classList.toggle('filled', parseInt(s.dataset.v)<=val);
+    });
+  }
+
+  function selectAppStar(val) {
+    curRating=val;
+    renderAppStars(val);
+    document.getElementById('app-star-label').textContent=starLabels[val]||'';
+    const b=document.getElementById('app-continue-btn'); b.disabled=false; b.style.opacity='1';
+  }
+
+  // Hover stars
+  document.querySelectorAll('#app-star-picker .sp-star').forEach(s => {
+    s.addEventListener('mouseenter', () => {
+      const v=parseInt(s.dataset.v);
+      document.querySelectorAll('#app-star-picker .sp-star').forEach(ss => {
+        ss.classList.toggle('hover', parseInt(ss.dataset.v)<=v && !ss.classList.contains('filled'));
+      });
+    });
+    s.addEventListener('mouseleave', () => {
+      document.querySelectorAll('#app-star-picker .sp-star').forEach(ss => ss.classList.remove('hover'));
+    });
+  });
+
+  function openFormSheet(rating) {
+    curRating = rating || curRating || 4;
+    // Form stars
+    document.querySelectorAll('#form-stars-row .ps').forEach(s => {
+      s.classList.toggle('filled', parseInt(s.dataset.v)<=curRating);
+    });
+    // Restore
+    document.getElementById('app-summary').value = savedSum;
+    document.getElementById('app-review').value = savedRev;
+    // Chips
+    const cc = document.getElementById('app-chips');
+    cc.innerHTML='';
+    (chipSets[curRating]||[]).forEach(chip => {
+      const btn = document.createElement('button');
+      btn.className='app-chip';
+      btn.textContent=chip;
+      btn.onclick=()=>{ document.getElementById('app-summary').value=chip; savedSum=chip; };
+      cc.appendChild(btn);
+    });
+    document.getElementById('sheet-stars').classList.remove('active');
+    document.getElementById('sheet-form').classList.add('active');
+  }
+
+  function saveSummary(){ savedSum=document.getElementById('app-summary').value; }
+  function saveReview(){ savedRev=document.getElementById('app-review').value; }
+
+  function toggleAppInitials(){
+    const cb=document.getElementById('app-initials');
+    document.getElementById('app-author').value = cb.checked ? 'P. G.' : 'Pamela G.';
+  }
+
+  function backToStars(){
+    savedSum=document.getElementById('app-summary').value;
+    savedRev=document.getElementById('app-review').value;
+    renderAppStars(curRating);
+    document.getElementById('app-star-label').textContent=starLabels[curRating]||'';
+    const b=document.getElementById('app-continue-btn'); b.disabled=false; b.style.opacity='1';
+    document.getElementById('sheet-form').classList.remove('active');
+    document.getElementById('sheet-stars').classList.add('active');
+  }
+
+  function submitAppReview(){
+    document.getElementById('sheet-form').classList.remove('active');
+    document.getElementById('sheet-success').classList.add('active');
+  }
+
+  function openEditFlow(){
+    document.getElementById('sheet-edit').classList.remove('active');
+    curRating=4; renderAppStars(4);
+    document.getElementById('app-star-label').textContent=starLabels[4];
+    const b=document.getElementById('app-continue-btn'); b.disabled=false; b.style.opacity='1';
+    document.getElementById('sheet-stars').classList.add('active');
+  }
+
+  // Close sheet by tapping backdrop
+  document.querySelectorAll('.sheet-overlay').forEach(o => {
+    o.addEventListener('click', e => { if(e.target===o) closeAllSheets(); });
+  });
+</script>
+</body>
+</html>
